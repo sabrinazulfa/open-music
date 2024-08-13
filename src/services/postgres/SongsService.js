@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
-const { mapDBToModel } = require('../../utils/songs');
+const { mapSongsToModel } = require('../../utils/index');
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class SongsService {
@@ -9,12 +9,12 @@ class SongsService {
     this._pool = new Pool();
   }
 
-  async addSong({ title, year, genre, performer, duration, album_id}) {
+  async addSong({ title, year, genre, performer, duration, albumId}) {
     const id = `song-${nanoid(16)}`;
 
     const query = {
       text: 'INSERT INTO songs VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-      values: [id, title, year, genre, performer, duration, album_id],
+      values: [id, title, year, genre, performer, duration, albumId],
     };
 
     const result = await this._pool.query(query);
@@ -36,7 +36,7 @@ class SongsService {
       query = 'SELECT id, title, performer FROM songs';
     }
     const result = await this._pool.query(query);
-    return result.rows;
+    return result.rows.map(mapSongsToModel);
   }
 
   async getSongById(id) {
@@ -50,7 +50,7 @@ class SongsService {
       throw new NotFoundError('Lagu tidak ditemukan');
     }
  
-    return result.rows.map(mapDBToModel)[0];
+    return result.rows.map(mapSongsToModel)[0];
   }
 
   async editSongById(id, {title, year, genre, performer, duration, album_id}) {
