@@ -1,5 +1,6 @@
 {
     "env": {
+        "commonjs": true,
         "es2021": true,
         "node": true
     },
@@ -10,6 +11,11 @@
         "ecmaVersion": 2020
     },
     "rules": {
-        "no-console": "off"
+        "no-console": "off",
+        "no-underscore-dangle":"off",
+        "linebreak-style": "off",
+        "camelcase": "off",
+        "eslint-plugin-import/no-extraneous-dependencies": "off",
+        "no-unused-vars": "off"
     }
 }

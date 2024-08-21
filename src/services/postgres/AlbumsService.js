@@ -22,7 +22,6 @@ class AlbumsService {
     if (!result.rows[0].id) {
       throw new InvariantError('Album gagal ditambahkan');
     }
- 
     return result.rows[0].id;
   }
 
@@ -31,19 +30,6 @@ class AlbumsService {
     return result.rows.map(mapAlbumToModel);
   }
 
-  // async getAlbumById(id) {
-  //   const query = {
-  //     text: 'SELECT * FROM albums WHERE id = $1',
-  //     values: [id],
-  //   };
-  //   const result = await this._pool.query(query);
-
-  //   if (!result.rows.length) {
-  //     throw new NotFoundError('Album tidak ditemukan');
-  //   }
- 
-  //   return result.rows.map(mapDBToModel)[0];
-  // }
   async getAlbumById(id) {
     const albumQuery = {
       text: 'SELECT id, name, year FROM albums WHERE id = $1',
@@ -64,23 +50,16 @@ class AlbumsService {
     };
     const songsResult = await this._pool.query(songsQuery);
 
-    // Map songs to model
-    // const songs = songsResult.rows.map((song) => ({
-    //   id: song.id,
-    //   title: song.title,
-    //   performer: song.performer,
-    // }));
-
     const songs = songsResult.rows.map(mapSongsToModel);
 
     const response = {
       ...album,
-      songs, 
+      songs,
     };
     return response;
   }
 
-  async editAlbumById(id, {name, year}) {
+  async editAlbumById(id, { name, year }) {
     const query = {
       text: 'UPDATE albums SET name = $1, year = $2 WHERE id = $3 RETURNING id',
       values: [name, year, id],
@@ -98,7 +77,6 @@ class AlbumsService {
       text: 'DELETE FROM albums WHERE id = $1 RETURNING id',
       values: [id],
     };
- 
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
