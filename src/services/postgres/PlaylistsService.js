@@ -5,8 +5,9 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistsService {
-  constructor() {
+  constructor(collaborationService) {
     this._pool = new Pool();
+    this._collaborationService = collaborationService;
   }
 
   async addPlaylist({ name, owner }) {
@@ -29,10 +30,10 @@ class PlaylistsService {
   async getPlaylists(owner) {
     const query = {
       text: `
-        SELECT playlists.id, playlists.name, users.username 
-        FROM playlists
-        LEFT JOIN users ON playlists.owner = users.id
-        WHERE playlists.owner = $1
+        SELECT playlists.* FROM playlists
+        LEFT JOIN collaborations ON collaborations.playlist_id = playlists.id
+        WHERE playlists.owner = $1 OR collaborations.user_id = $1
+        GROUP BY playlists.id
         `,
       values: [owner],
     };
@@ -57,7 +58,7 @@ class PlaylistsService {
 
   async verifyPlaylistOwner(playlistId, userId) {
     const query = {
-      text: 'SELECT owner FROM playlists WHERE id = $1',
+      text: 'SELECT * FROM playlists WHERE id = $1',
       values: [playlistId],
     };
 
@@ -81,19 +82,11 @@ class PlaylistsService {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      // Jika bukan pemilik, periksa apakah user adalah kolaborator
-      try {
-        const collaborationQuery = {
-          text: 'SELECT user_id FROM collaborations WHERE playlist_id = $1 AND user_id = $2',
-          values: [playlistId, userId],
-        };
-        const collaborationResult = await this._pool.query(collaborationQuery);
 
-        if (!collaborationResult.rowCount) {
-          throw new AuthorizationError('Anda tidak diizinkan mengakses resource ini');
-        }
-      } catch (collaborationError) {
-        throw error; // Lempar error asli jika kolaborator tidak ditemukan
+      try {
+        await this._collaborationService.verifyCollaborator(playlistId, userId);
+      } catch {
+        throw error;
       }
     }
   }
