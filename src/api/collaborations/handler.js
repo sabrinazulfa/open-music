@@ -1,14 +1,16 @@
+const ClientError = require('../../exceptions/ClientError');
+
 class CollaborationsHandler {
   constructor(collaborationsService, playlistsService, validator) {
     this._collaborationsService = collaborationsService;
     this._playlistsService = playlistsService;
     this._validator = validator;
+
+    this.postCollaborationHandler = this.postCollaborationHandler.bind(this);
+    this.deleteCollaborationHandler = this.deleteCollaborationHandler.bind(this);
   }
 
   async postCollaborationHandler(request, h) {
-    if (!this._validator) {
-      throw new Error('Validator is not defined');
-    }
     this._validator.validateCollaborationPayload(request.payload);
 
     const { id: credentialId } = request.auth.credentials;
