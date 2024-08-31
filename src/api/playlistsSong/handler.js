@@ -1,11 +1,12 @@
 const ClientError = require('../../exceptions/ClientError');
 
 class PlaylistSongsHandler {
-  constructor(service, validator, playlistsService, songsService) {
+  constructor(service, validator, playlistsService, songsService, CollaborationsService) {
     this._service = service;
     this._validator = validator;
     this._playlistService = playlistsService;
     this._songService = songsService;
+    this._collaborationsService = CollaborationsService;
 
     this.postPlaylistSongHandler = this.postPlaylistSongHandler.bind(this);
     this.getPlaylistsSongsHandler = this.getPlaylistsSongsHandler.bind(this);
@@ -26,6 +27,15 @@ class PlaylistSongsHandler {
       songId,
     });
 
+    const time = new Date().toISOString();
+    await this._service.addActivity({
+      playlistId,
+      songId,
+      credentialId,
+      action: 'add',
+      time,
+    });
+
     const response = h.response({
       status: 'success',
       message: 'Lagu berhasil ditambahkan ke playlist',
@@ -37,21 +47,21 @@ class PlaylistSongsHandler {
     return response;
   }
 
-  async getPlaylistsSongsHandler(request) {
+  async getPlaylistsSongsHandler(request, h) {
     const { id: playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
-    // Verifikasi kepemilikan atau kolaborasi
     await this._playlistService.verifyPlaylistSongsAccess(playlistId, credentialId);
 
     const playlist = await this._service.getSongsFromPlaylist(playlistId, credentialId);
-
-    return {
+    const response = h.response({
       status: 'success',
       data: {
         playlist,
       },
-    };
+    });
+    response.code(200);
+    return response;
   }
 
   async deletePlaylistSongByIdHandler(request, h) {
@@ -60,10 +70,18 @@ class PlaylistSongsHandler {
     const { songId } = request.payload;
     const { id: credentialId } = request.auth.credentials;
 
-    // Validasi songId
     await this._playlistService.verifyPlaylistSongsAccess(playlistId, credentialId);
 
     await this._service.deleteSongFromPlaylist(playlistId, songId);
+
+    const time = new Date().toISOString();
+    await this._service.addActivity({
+      playlistId,
+      songId,
+      credentialId,
+      action: 'delete',
+      time,
+    });
 
     const response = h.response({
       status: 'success',

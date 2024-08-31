@@ -88,6 +88,24 @@ class PlaylistsSongService {
       throw new NotFoundError('Lagu gagal dihapus dari playlist. Id tidak ditemukan');
     }
   }
+
+  async addActivity({
+    playlistId, songId, credentialId, action, time,
+  }) {
+    const id = `activity-${nanoid(16)}`;
+    const query = {
+      text: 'INSERT INTO playlist_activities VALUES($1, $2, $3, $4, $5, $6) RETURNING id',
+      values: [id, playlistId, songId, credentialId, action, time],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows[0].id) {
+      throw new InvariantError('Aktivitas gagal ditambahkan');
+    }
+
+    return result.rows[0].id;
+  }
 }
 
 module.exports = PlaylistsSongService;
