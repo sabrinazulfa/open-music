@@ -58,9 +58,6 @@ const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
-    debug: {
-      request: ['error'], // tambahkan ini
-    },
     routes: {
       cors: {
         origin: ['*'],
@@ -68,14 +65,12 @@ const init = async () => {
     },
   });
 
-  // registrasi plugin eksternal
   await server.register([
     {
       plugin: Jwt,
     },
   ]);
 
-  // mendefinisikan strategy autentikasi jwt
   server.auth.strategy('openmusic_jwt', 'jwt', {
     keys: process.env.ACCESS_TOKEN_KEY,
     verify: {
@@ -133,7 +128,10 @@ const init = async () => {
     {
       plugin: playlistSong,
       options: {
-        service: playlistsSongService,
+        playlistsSongService,
+        playlistsService,
+        songsService,
+        collaborationsService,
         validator: PlaylistsSongValidator,
       },
     },
