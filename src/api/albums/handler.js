@@ -104,7 +104,7 @@ class AlbumsHandler {
 
   async getAlbumLikeHandler(request, h) {
     const { id: albumId } = request.params;
-    const { dataOrigin, likes } = await this._service.getAlbumLikes(albumId);
+    const { customHeader, likes } = await this._service.getAlbumLikes(albumId);
 
     const response = h.response({
       status: 'success',
@@ -112,7 +112,7 @@ class AlbumsHandler {
         likes,
       },
     });
-    response.header('X-Data-Source', dataOrigin);
+    response.header('X-Data-Source', customHeader);
     response.code(200);
     return response;
   }

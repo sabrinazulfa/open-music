@@ -124,13 +124,13 @@ class AlbumsService {
 
   async getAlbumLikes(id) {
     try {
-      const dataOrigin = 'cache';
+      const customHeader = 'cache';
       const likes = await this._cacheService.get(`likes:${id}`);
-      return { dataOrigin, likes: +likes };
+      return { customHeader, likes: +likes };
     } catch (error) {
       await this.getAlbumById(id);
 
-      const dataOrigin = 'server';
+      const customHeader = 'server';
       const query = {
         text: 'SELECT * FROM album_likes WHERE album_id = $1',
         values: [id],
@@ -139,7 +139,7 @@ class AlbumsService {
       const result = await this._pool.query(query);
       const likes = result.rowCount;
       await this._cacheService.set(`likes:${id}`, likes);
-      return { dataOrigin, likes };
+      return { customHeader, likes };
     }
   }
 

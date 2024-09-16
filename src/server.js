@@ -75,9 +75,6 @@ const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
-    debug: {
-      request: ['error'], // tambahkan ini
-    },
     routes: {
       cors: {
         origin: ['*'],
